@@ -42,10 +42,6 @@ ridge_regression <- function(dat, response, lambda) {
 
   results <- cbind(results,lambda)
 
-  ### This should be a data frame, with columns named
-  ### "Intercept" and the same variable names as dat, and also a column
-  ### called "lambda".
-
   return(results)
 }
 
@@ -98,11 +94,6 @@ find_best_lambda <- function(train_dat, test_dat, response, lambda) {
     }
 
   lambda_errors <- furrr::future_map_dfr(lambda, ~get_sse(x, y, test, .x))
-
-    ### lambda_errors should be a data frame with two columns: "lambda" and "error"
-    ### For each lambda, you should record the resulting Sum of Squared error
-    ### (i.e., the predicted value minus the real value squared) from prediction
-    ### on the test dataset. ie: sum((y-hat - yi)^2)
 
   return(lambda_errors)
 

@@ -13,8 +13,10 @@
 #' @export
 simple_linear_regression <- function(dat, response, explanatory, method = NULL){
 
-  x <- dat %>% pull({{explanatory}})
-  y <- dat %>% pull({{response}})
+  x <- dat %>%
+    pull({{explanatory}})
+  y <- dat %>%
+    pull({{response}})
 
   explan_name <- dat %>%
     select({{explanatory}}) %>%

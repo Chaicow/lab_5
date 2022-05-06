@@ -16,8 +16,10 @@
 #'
 #' @export
 predict_from_coefs <- function(dat, response, coefs){
-  y <- data.matrix(dat %>% pull({{response}}))
-  x <- dat %>% select(-{{response}})
+  y <- data.matrix(dat %>%
+                     pull({{response}}))
+  x <- dat %>%
+    select(-{{response}})
 
   x <- cbind(1, x) %>%
     data.matrix()

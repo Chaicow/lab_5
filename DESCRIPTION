@@ -18,7 +18,7 @@ Imports:
     dplyr,
     MASS,
     tibble,
-    data.table,
-    furrr
+    furrr,
+    data.table
 Suggests: 
     testthat (>= 2.1.0)
