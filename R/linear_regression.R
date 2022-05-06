@@ -8,6 +8,7 @@
 #' @return A data frame of coefficients
 #'
 #' @import dplyr
+#' @import data.table
 #'
 #' @export
 simple_linear_regression <- function(dat, response, explanatory, method = NULL){
@@ -22,15 +23,9 @@ simple_linear_regression <- function(dat, response, explanatory, method = NULL){
   ### Edit code after here
 
   x_mat <- cbind(1, x) %>%
-    as.matrix()
+    data.matrix()
 
-  y_mat <- as.matrix(y)
-
-  x_inverse <- solve(crossprod(x_mat))
-
-  xy_mat <- t(x_mat) %*% y_mat
-
-  betas <- x_inverse %*% xy_mat
+  betas <- solve(crossprod(x_mat)) %*% (t(x_mat) %*% data.matrix(y))
 
   beta_0 <- betas[1]
   beta_1 <- betas[2]
@@ -64,11 +59,12 @@ simple_linear_regression <- function(dat, response, explanatory, method = NULL){
 #' @return A data frame of coefficients
 #'
 #' @import dplyr
+#' @import data.table
 #'
 #'@export
 #'
 multiple_linear_regression <- function(dat, response, method = NULL) {
-  y <- as.matrix(dat %>%
+  y <- data.matrix(dat %>%
                    pull({{response}}))
   x <- dat %>%
     select(-{{response}})
@@ -76,11 +72,9 @@ multiple_linear_regression <- function(dat, response, method = NULL) {
   x <- cbind(1, x) %>%
     as.matrix()
 
-  x_inverse <- solve(crossprod(x))
-  xy_mat <- t(x) %*% y
-  coefs <- x_inverse %*% xy_mat
+  coefs <- solve(crossprod(x)) %*% (t(x) %*% y)
 
-  df_coefs <- as.data.frame(t(coefs))
+  df_coefs <- data.table(t(coefs))
 
   colnames(df_coefs)[1] <- "Intercept"
 

@@ -17,6 +17,8 @@ Imports:
     magrittr,
     dplyr,
     MASS,
-    tibble
+    tibble,
+    data.table,
+    furrr
 Suggests: 
     testthat (>= 2.1.0)
