@@ -19,78 +19,89 @@
 #' @export
 ridge_regression <- function(dat, response, lambda) {
 
-  x <- dat %>% select(-{{response}})
-  y <- as.matrix(dat %>% pull({{response}}))
+  x <- dat %>%
+    select(-{{response}})
+  y <- dat %>%
+    pull({{response}}) %>%
+    as.matrix()
 
   x <- scale(x)
   x <- cbind(1, x) %>%
-   as.matrix(x)
+   as.matrix()
 
   get_betas <- function(x, y, lambda){
-    my_results <- as.data.frame(t(solve(t(x) %*% x + lambda*diag(ncol(x))) %*% (t(x) %*% y)))
+    my_results <- t(solve(t(x) %*% x + lambda * diag(ncol(x))) %*% (t(x) %*% y)) %>%
+      as.data.frame()
     return(my_results)
     }
 
-  my_results <- purrr::map_dfr(lambda, ~get_betas(x,y,.x))
+  results <- purrr::map_dfr(lambda, ~get_betas(x, y, .x))
 
-  colnames(my_results)[1] <- "Intercept"
+  names(results)[1] <- "Intercept"
 
-  my_results <- cbind(my_results,lambda)
-
+  results <- cbind(results,lambda)
 
   ### This should be a data frame, with columns named
   ### "Intercept" and the same variable names as dat, and also a column
   ### called "lambda".
 
-  return(my_results)
+  return(results)
 }
 
-  #' Determines the best penalty term from a set of options
-  #'
-  #' This function uses a randomly chosen test and training set
-  #'
-  #' No interaction terms are included.
-  #'
-  #'
-  #' @param train_dat A data frame to construct the model from
-  #' @param test_dat A data frame to test the model on
-  #' @param response The name of a response variable in the data frame (unquoted)
-  #' @param lambda A vector of penalty terms to try
-  #'
-  #' @return A data frame of penalty terms and resulting errors
-  #'
-  #' @import dplyr
-  #'
-  #' @export
-  find_best_lambda <- function(train_dat, test_dat, response, lambda) {
+#' Determines the best penalty term from a set of options
+#'
+#' This function uses a randomly chosen test and training set
+#'
+#' No interaction terms are included.
+#'
+#'
+#' @param train_dat A data frame to construct the model from
+#' @param test_dat A data frame to test the model on
+#' @param response The name of a response variable in the data frame (unquoted)
+#' @param lambda A vector of penalty terms to try
+#'
+#' @return A data frame of penalty terms and resulting errors
+#'
+#' @import dplyr
+#'
+#' @export
+find_best_lambda <- function(train_dat, test_dat, response, lambda) {
 
-    x <- train_dat %>% select(-{{response}})
-    y <- as.matrix(train_dat %>% pull({{response}}))
-    test <- as.matrix(test_dat %>% pull({{response}}))
+  x <- train_dat %>%
+    select(-{{response}})
+  y <- train_dat %>%
+    pull({{response}}) %>%
+    as.matrix()
+  test <- test_dat %>%
+    pull({{response}}) %>%
+    as.matrix()
 
-    x <- scale(x)
-    x <- cbind(1, x) %>%
-      as.matrix(x)
+  x <- scale(x)
+  x <- cbind(1, x) %>%
+      as.matrix()
 
-  get_sse <- function(x,y,y_test,lambda) {
-    betas <- (t(solve(t(x) %*% x + lambda*diag(ncol(x))) %*% (t(x) %*% y)))
+  get_sse <- function(x, y, y_test, lambda) {
+
+    betas <- t(solve(t(x) %*% x + lambda * diag(ncol(x))) %*% (t(x) %*% y))
     preds <- x %*% t(betas)
     results <- as.data.frame(cbind(test, preds))
-    sse <- results %>%
-        mutate(se = ((test - preds)^2)) %>%
-        summarize(error = sum(se))
 
-      sse <- as.data.frame(cbind(lambda, sse))
-      return(sse)
+    sse <- results %>%
+        mutate(sqr_error = ((test - preds)^2)) %>%
+        summarize(error = sum(sqr_error))
+    df_sse <- as.data.frame(cbind(lambda, sse))
+
+    return(df_sse)
     }
 
-    lambda_errors <- purrr::map_dfr(lambda, ~get_sse(x,y,test,.x))
+  lambda_errors <- purrr::map_dfr(lambda, ~get_sse(x, y, test, .x))
 
     ### lambda_errors should be a data frame with two columns: "lambda" and "error"
     ### For each lambda, you should record the resulting Sum of Squared error
     ### (i.e., the predicted value minus the real value squared) from prediction
     ### on the test dataset. ie: sum((y-hat - yi)^2)
 
-    return(lambda_errors)
-  }
+  return(lambda_errors)
+
+}
 
