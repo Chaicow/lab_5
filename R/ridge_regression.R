@@ -82,7 +82,8 @@ find_best_lambda <- function(train_dat, test_dat, response, lambda) {
 
     betas <- t(solve(t(x) %*% x + lambda * diag(ncol(x))) %*% (t(x) %*% y))
     preds <- x %*% t(betas)
-    results <- data.table(cbind(test, preds))
+    results <- cbind(test, preds) %>%
+      data.table()
 
     sse <- results %>%
         mutate(sqr_error = ((test - preds)^2)) %>%
