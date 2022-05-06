@@ -14,36 +14,33 @@
 #' @return A data frame of coefficients
 #'
 #' @import dplyr
-#' @import purrr
+#' @import data.table
 #'
 #' @export
 ridge_regression <- function(dat, response, lambda) {
 
   x <- dat %>%
-    select(-{{response}})
+    select(-{{response}}) %>%
+    scale()
+
+  x <- cbind(1, x) %>%
+    data.matrix()
+
   y <- dat %>%
     pull({{response}}) %>%
-    as.matrix()
-
-  x <- scale(x)
-  x <- cbind(1, x) %>%
-   as.matrix()
+    data.matrix()
 
   get_betas <- function(x, y, lambda){
     my_results <- t(solve(t(x) %*% x + lambda * diag(ncol(x))) %*% (t(x) %*% y)) %>%
-      as.data.frame()
+      data.table()
     return(my_results)
     }
 
-  results <- purrr::map_dfr(lambda, ~get_betas(x, y, .x))
+  results <- furrr::future_map_dfr(lambda, ~get_betas(x, y, .x))
 
   names(results)[1] <- "Intercept"
 
   results <- cbind(results,lambda)
-
-  ### This should be a data frame, with columns named
-  ### "Intercept" and the same variable names as dat, and also a column
-  ### called "lambda".
 
   return(results)
 }
@@ -63,43 +60,40 @@ ridge_regression <- function(dat, response, lambda) {
 #' @return A data frame of penalty terms and resulting errors
 #'
 #' @import dplyr
-#'
+#' @import data.table
 #' @export
 find_best_lambda <- function(train_dat, test_dat, response, lambda) {
 
   x <- train_dat %>%
-    select(-{{response}})
+    select(-{{response}}) %>%
+    scale()
+
+  x <- cbind(1, x) %>%
+    data.matrix()
+
   y <- train_dat %>%
     pull({{response}}) %>%
-    as.matrix()
+    data.matrix()
   test <- test_dat %>%
     pull({{response}}) %>%
-    as.matrix()
-
-  x <- scale(x)
-  x <- cbind(1, x) %>%
-      as.matrix()
+    data.matrix()
 
   get_sse <- function(x, y, y_test, lambda) {
 
     betas <- t(solve(t(x) %*% x + lambda * diag(ncol(x))) %*% (t(x) %*% y))
     preds <- x %*% t(betas)
-    results <- as.data.frame(cbind(test, preds))
+    results <- data.table(cbind(test, preds))
 
     sse <- results %>%
         mutate(sqr_error = ((test - preds)^2)) %>%
         summarize(error = sum(sqr_error))
-    df_sse <- as.data.frame(cbind(lambda, sse))
+    df_sse <- cbind(lambda, sse) %>%
+        data.table()
 
     return(df_sse)
     }
 
-  lambda_errors <- purrr::map_dfr(lambda, ~get_sse(x, y, test, .x))
-
-    ### lambda_errors should be a data frame with two columns: "lambda" and "error"
-    ### For each lambda, you should record the resulting Sum of Squared error
-    ### (i.e., the predicted value minus the real value squared) from prediction
-    ### on the test dataset. ie: sum((y-hat - yi)^2)
+  lambda_errors <- furrr::future_map_dfr(lambda, ~get_sse(x, y, test, .x))
 
   return(lambda_errors)
 

@@ -12,21 +12,24 @@
 #' @return A data frame of true and predicted values
 #'
 #' @import dplyr
+#' @import data.table
 #'
 #' @export
 predict_from_coefs <- function(dat, response, coefs){
-  y <- as.matrix(dat %>% pull({{response}}))
-  x <- dat %>% select(-{{response}})
+  y <- data.matrix(dat %>%
+                     pull({{response}}))
+  x <- dat %>%
+    select(-{{response}})
 
   x <- cbind(1, x) %>%
-    as.matrix()
+    data.matrix()
 
-  coefs <- as.matrix(coefs)
+  coefs <- data.matrix(coefs)
   predictions <- x %*% t(coefs)
 
   results <- cbind(y, predictions)
 
-  results <- as.data.frame(results)
+  results <- data.table(results)
 
   colnames(results)[1] <- "True Values"
   colnames(results)[2] <- "Predicted Values"
